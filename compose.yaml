@@ -1,0 +1,38 @@
+services:
+    mysql:
+        image: mysql:8.4
+        restart: unless-stopped
+        ports:
+            - '127.0.0.1:${DB_PORT:-3306}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD:-root}'
+            MYSQL_DATABASE: '${DB_DATABASE:-erp}'
+            MYSQL_USER: '${DB_USERNAME:-erp}'
+            MYSQL_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - mysql-data:/var/lib/mysql
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --host=127.0.0.1 --user="$${MYSQL_USER}" --database="$${MYSQL_DATABASE}" --execute="SELECT 1" --silent',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+    mailpit:
+        image: axllent/mailpit:v1.27
+        restart: unless-stopped
+        ports:
+            - '127.0.0.1:${MAIL_PORT:-1025}:1025'
+            - '127.0.0.1:${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+        environment:
+            MP_DATABASE: /data/mailpit.db
+        volumes:
+            - mailpit-data:/data
+
+volumes:
+    mysql-data:
+    mailpit-data:
